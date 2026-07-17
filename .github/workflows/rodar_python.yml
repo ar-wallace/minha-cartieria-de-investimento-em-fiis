@@ -1,13 +1,9 @@
-name: Executar Carteira Python
-
-permissions:
-  contents: write
+name: Executar Script de FIIs
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * 1-5' # Roda de segunda a sexta às 12:00 UTC
+  workflow_dispatch: # Permite que você rode manualmente se quiser
 
 jobs:
   build:
@@ -15,25 +11,24 @@ jobs:
 
     steps:
     - name: Baixar código do repositório
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Configurar o Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-node-version: '3.10'
 
-    # Agora instalamos o pandas direto, sem depender de arquivo de texto!
-    - name: Instalar dependências
+    - name: Instalar dependências necessárias
       run: |
-        pip install pandas
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-    - name: Rodar script da carteira
-      run: |
-        python carteira.py
+    - name: Rodar o script de cálculo
+      run: python carteira.py
 
-    - name: Salvar alterações no repositório
+    - name: Salvar e subir alterações no index.html
       run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
         git add index.html
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Automação: Relatório updated" && git push)
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Automação: Relatório atualizado" && git push)
