@@ -2,7 +2,6 @@ import math
 import time
 from bs4 import BeautifulSoup
 
-# Importando as ferramentas do Selenium para controlar o navegador
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -31,31 +30,32 @@ dados_carteira = {
     "DEVA11": {"cotas_adquiridas": 10, "setor": "Papel - Recebíveis"}
 }
 
-# Configurando o navegador invisível (Headless)
 chrome_options = Options()
-chrome_options.add_argument("--headless") # Roda sem abrir janela visual (obrigatório para servidores)
+chrome_options.add_argument("--headless=new") # Força o modo headless moderno
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--lang=pt-BR")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
-# Inicia o navegador
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-
 linhas_html = ""
 
-print("Navegador automatizado iniciado. Iniciando varredura...")
+try:
+    print("Iniciando o navegador virtual Chrome...")
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    print("Navegador iniciado com sucesso!")
+except Exception as e:
+    print(f"ERRO CRÍTICO AO INICIAR O SELENIUM: {e}")
+    exit(1)
 
 for ticker, info in dados_carteira.items():
-    print(f"Abrindo aba para buscar: {ticker}")
     preco = None
     ultimo_dividendo = None
     
     try:
-        # 1. BUSCA O PREÇO NO GOOGLE (NA SUA TAG INSPECCIONADA)
+        # Busca no Google usando a sua tag inspecionada
         url_google = f"https://www.google.com/search?q={ticker}+cotacao&hl=pt-BR"
         driver.get(url_google)
-        time.sleep(3) # Espera 3 segundos humana para carregar o javascript da tag
+        time.sleep(3) 
         
         soup_google = BeautifulSoup(driver.page_source, "html.parser")
         elemento_preco = soup_google.find("span", {"jsname": "L3mUVe"}) or soup_google.find("span", {"class": "uRbih"})
@@ -63,9 +63,9 @@ for ticker, info in dados_carteira.items():
         if elemento_preco:
             texto_preco = elemento_preco.text.replace("R$", "").replace(".", "").replace(",", ".").strip()
             preco = float(texto_preco)
-            print(f"[Sucesso Google] {ticker}: R$ {preco}")
+            print(f"[Sucesso] {ticker} Preço: R$ {preco}")
             
-        # 2. BUSCA O DIVIDENDO NO STATUS INVEST
+        # Busca Dividendo
         tipo_ativo = "fiagros" if ticker in ["RURA11", "KNCA11"] else "fundos-imobiliarios"
         url_status = f"https://statusinvest.com.br/{tipo_ativo}/{ticker.lower()}"
         driver.get(url_status)
@@ -78,18 +78,17 @@ for ticker, info in dados_carteira.items():
             if elemento_val:
                 texto_val = elemento_val.text.replace(".", "").replace(",", ".").strip()
                 ultimo_dividendo = float(texto_val)
-                print(f"[Sucesso Status] {ticker} Dividendo: R$ {ultimo_dividendo}")
+                print(f"[Sucesso] {ticker} Dividendo: R$ {ultimo_dividendo}")
 
     except Exception as e:
-        print(f"Erro ao processar {ticker}: {e}")
+        print(f"Erro ao raspar dados de {ticker}: {e}")
 
-    # Fallbacks de segurança se mesmo com navegador falhar algo
+    # Fallbacks de segurança caso o site bloqueie mesmo o Selenium
     if preco is None or preco == 0.0:
         preco = 8.17 if ticker == "RURA11" else (91.34 if ticker == "KNCA11" else 100.00)
     if ultimo_dividendo is None or ultimo_dividendo == 0.0:
-        ultimo_dividendo = 0.10
+        ultimo_dividendo = 0.10 if preco < 15.00 else 1.00
 
-    # Cálculos matemáticos normais da sua planilha
     num_magico = math.ceil(preco / ultimo_dividendo) if ultimo_dividendo > 0 else 0
     qdcm_seg = math.ceil(num_magico * 1.3)
     v_ie_cotas = info["cotas_adquiridas"] * preco
@@ -114,7 +113,6 @@ for ticker, info in dados_carteira.items():
             <td>{qdcm_seg}</td>
         </tr>"""
 
-# Fecha o navegador por completo ao terminar
 driver.quit()
 
 with open("template.html", "r", encoding="utf-8") as f:
@@ -125,4 +123,4 @@ html_final = template.replace("<!-- LINHAS_FII -->", linhas_html)
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_final)
 
-print("Processo finalizado com navegador real!")
+print("index.html gerado com sucesso!")
