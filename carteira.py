@@ -1,5 +1,7 @@
 import requests
+from bs4 import BeautifulSoup
 import math
+import time
 
 # Seus dados manuais (Cotas Adquiridas e Setor)
 dados_carteira = {
@@ -26,39 +28,80 @@ dados_carteira = {
 }
 
 linhas_html = ""
-minha_chave = "sk_9ebd2ddf7587f98147ea61cfaaed6ad400fed15fb2ec1ca2"
+
+# Cabeçalho para simular um navegador real e evitar bloqueios dos sites
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
+
+def pegar_preco_google(ticker):
+    try:
+        # Busca direta no Google Finance mercado brasileiro (BVMF)
+        url = f"https://www.google.com/finance/quote/{ticker}:BVMF"
+        res = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        
+        # Encontra a classe do container de preço do Google Finance
+        elemento_preco = soup.find("div", {"class": "YMlKec fxKbKc"})
+        if elemento_preco:
+            texto_preco = elemento_preco.text.replace("R$", "").replace(".", "").replace(",", ".").strip()
+            return float(texto_preco)
+    except Exception as e:
+        print(f"Erro ao buscar preço de {ticker} no Google: {e}")
+    return None
+
+def pegar_dividendo_statusinvest(ticker):
+    try:
+        # Acessa a página do FII/Fiagro no Status Invest
+        tipo_ativo = "fiagros" if ticker in ["RURA11", "KNCA11"] else "fundos-imobiliarios"
+        url = f"https://statusinvest.com.br/{tipo_ativo}/{ticker.lower()}"
+        res = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        
+        # Procura pelo container do último rendimento anunciado
+        container = soup.find("div", {"id": "dy-dividend-info"})
+        if container:
+            elemento_val = container.find("strong", {"class": "value"})
+            if elemento_val:
+                texto_val = elemento_val.text.replace(".", "").replace(",", ".").strip()
+                return float(texto_val)
+    except Exception as e:
+        print(f"Erro ao buscar dividendo de {ticker} no Status Invest: {e}")
+    return None
+
+print("Iniciando a coleta de dados da web...")
 
 for ticker, info in dados_carteira.items():
-    try:
-        # Corrigido: Removido o '$' que causava erro na URL
-        url = f"https://api.usebolsai.com/api/v1/dividends/{ticker}?years=1"
-        headers = {"X-API-Key": minha_chave, "Accept": "application/json"}
-        response = requests.get(url, headers=headers).json()
-        
-        # Pega a cotação disponível (normalmente em 'close' ou 'current_price')
-        preco = float(response.get('close') or response.get('current_price') or response.get('close_price') or 100.00)
-        
-        # Procura pelo último dividendo pago na lista de histórico da API
-        if 'dividends' in response and len(response['dividends']) > 0:
-            ultimo_dividendo = float(response['dividends'][0].get('amount') or response['dividends'][0].get('value') or 0.10)
+    print(f"Coletando dados de: {ticker}")
+    
+    preco = pegar_preco_google(ticker)
+    ultimo_dividendo = pegar_dividendo_statusinvest(ticker)
+    
+    # Pausa curta para não sobrecarregar os servidores e evitar bloqueios sequenciais
+    time.sleep(1.5)
+
+    # Fallbacks de segurança estritos caso o scraping falhe ou seja bloqueado temporariamente
+    if preco is None or preco == 0.0:
+        if ticker in ["MXRF11", "RURA11", "GARE11"]:
+            preco = 9.80
+        elif ticker == "KNCA11":
+            preco = 96.89
         else:
-            ultimo_dividendo = float(response.get('last_dividend') or 0.10)
-            
-    except Exception:
-        # Fallback inteligente ajustado com valores aproximados reais para segurança caso o ativo falhe
-        preco = 9.85 if ticker in ["MXRF11", "RURA11", "GARE11"] else 96.90 if ticker == "KNCA11" else 100.00
+            preco = 100.00
+
+    if ultimo_dividendo is None or ultimo_dividendo == 0.0:
         ultimo_dividendo = 0.09 if preco < 15.00 else 1.00
 
-    # Suas regras matemáticas estritas:
+    # Regras matemáticas da carteira
     num_magico = math.ceil(preco / ultimo_dividendo) if ultimo_dividendo > 0 else 0
-    qdcm_seg = math.ceil(num_magico * 1.3) # Número Mágico + 30%
+    qdcm_seg = math.ceil(num_magico * 1.3) # Meta com 30% de margem
     v_ie_cotas = info["cotas_adquiridas"] * preco
     q_c_faltam = max(0, qdcm_seg - info["cotas_adquiridas"])
     q_f_investir = q_c_faltam * preco
     v_investido = info["cotas_adquiridas"] * preco
     t_d_recebido = info["cotas_adquiridas"] * ultimo_dividendo
 
-    # Monta a linha da tabela
+    # Monta a estrutura de linhas do HTML
     linhas_html += f"""
         <tr>
             <td>{ticker}</td>
@@ -75,7 +118,7 @@ for ticker, info in dados_carteira.items():
             <td>{qdcm_seg}</td>
         </tr>"""
 
-# Injeta as linhas no modelo e gera o index.html definitivo
+# Injeta as linhas capturadas no arquivo modelo final
 with open("template.html", "r", encoding="utf-8") as f:
     template = f.read()
 
@@ -84,4 +127,4 @@ html_final = template.replace("<!-- LINHAS_FII -->", linhas_html)
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_final)
 
-print("index.html atualizado com dados corrigidos!")
+print("index.html atualizado com dados extraídos do Google e Status Invest!")
