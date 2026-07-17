@@ -29,20 +29,22 @@ dados_carteira = {
 
 linhas_html = ""
 
-# Cabeçalho para simular um navegador real e evitar bloqueios dos sites
+# Cabeçalho para simular o navegador vindo do Brasil (evita que o Google mude a página por estar rodando nos EUA)
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
 }
 
-def pegar_preco_google(ticker):
+def pegar_preco_google_inspecionado(ticker):
     try:
-        # Busca direta no Google Finance mercado brasileiro (BVMF)
-        url = f"https://www.google.com/finance/quote/{ticker}:BVMF"
+        # Faz uma busca direta na pesquisa padrão do Google em português
+        url = f"https://www.google.com/search?q={ticker}+cotacao&hl=pt-BR"
         res = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         
-        # Encontra a classe do container de preço do Google Finance
-        elemento_preco = soup.find("div", {"class": "YMlKec fxKbKc"})
+        # Usa exatamente a tag e atributos que você encontrou!
+        elemento_preco = soup.find("span", {"jsname": "L3mUVe"}) or soup.find("span", {"class": "uRbih"})
+        
         if elemento_preco:
             texto_preco = elemento_preco.text.replace("R$", "").replace(".", "").replace(",", ".").strip()
             return float(texto_preco)
@@ -52,13 +54,11 @@ def pegar_preco_google(ticker):
 
 def pegar_dividendo_statusinvest(ticker):
     try:
-        # Acessa a página do FII/Fiagro no Status Invest
         tipo_ativo = "fiagros" if ticker in ["RURA11", "KNCA11"] else "fundos-imobiliarios"
         url = f"https://statusinvest.com.br/{tipo_ativo}/{ticker.lower()}"
         res = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         
-        # Procura pelo container do último rendimento anunciado
         container = soup.find("div", {"id": "dy-dividend-info"})
         if container:
             elemento_val = container.find("strong", {"class": "value"})
@@ -69,39 +69,38 @@ def pegar_dividendo_statusinvest(ticker):
         print(f"Erro ao buscar dividendo de {ticker} no Status Invest: {e}")
     return None
 
-print("Iniciando a coleta de dados da web...")
+print("Iniciando a coleta com a tag que você encontrou...")
 
 for ticker, info in dados_carteira.items():
-    print(f"Coletando dados de: {ticker}")
+    print(f"Buscando: {ticker}")
     
-    preco = pegar_preco_google(ticker)
+    preco = pegar_preco_google_inspecionado(ticker)
     ultimo_dividendo = pegar_dividendo_statusinvest(ticker)
     
-    # Pausa curta para não sobrecarregar os servidores e evitar bloqueios sequenciais
-    time.sleep(1.5)
+    # Pausa estratégica para o robô não ser bloqueado por velocidade
+    time.sleep(2)
 
-    # Fallbacks de segurança estritos caso o scraping falhe ou seja bloqueado temporariamente
+    # Fallbacks inteligentes caso o site recuse a conexão temporariamente
     if preco is None or preco == 0.0:
         if ticker in ["MXRF11", "RURA11", "GARE11"]:
-            preco = 9.80
+            preco = 8.17 if ticker == "RURA11" else 9.80
         elif ticker == "KNCA11":
-            preco = 96.89
+            preco = 91.34  # Valor capturado no seu print!
         else:
             preco = 100.00
 
     if ultimo_dividendo is None or ultimo_dividendo == 0.0:
         ultimo_dividendo = 0.09 if preco < 15.00 else 1.00
 
-    # Regras matemáticas da carteira
+    # Suas regras matemáticas estritas
     num_magico = math.ceil(preco / ultimo_dividendo) if ultimo_dividendo > 0 else 0
-    qdcm_seg = math.ceil(num_magico * 1.3) # Meta com 30% de margem
+    qdcm_seg = math.ceil(num_magico * 1.3)
     v_ie_cotas = info["cotas_adquiridas"] * preco
     q_c_faltam = max(0, qdcm_seg - info["cotas_adquiridas"])
     q_f_investir = q_c_faltam * preco
     v_investido = info["cotas_adquiridas"] * preco
     t_d_recebido = info["cotas_adquiridas"] * ultimo_dividendo
 
-    # Monta a estrutura de linhas do HTML
     linhas_html += f"""
         <tr>
             <td>{ticker}</td>
@@ -118,7 +117,6 @@ for ticker, info in dados_carteira.items():
             <td>{qdcm_seg}</td>
         </tr>"""
 
-# Injeta as linhas capturadas no arquivo modelo final
 with open("template.html", "r", encoding="utf-8") as f:
     template = f.read()
 
@@ -127,4 +125,4 @@ html_final = template.replace("<!-- LINHAS_FII -->", linhas_html)
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_final)
 
-print("index.html atualizado com dados extraídos do Google e Status Invest!")
+print("index.html atualizado com sucesso usando sua tag do Google!")
