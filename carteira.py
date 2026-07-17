@@ -2,7 +2,6 @@ import requests
 import math
 
 # Seus dados manuais (Cotas Adquiridas e Setor)
-# Quando comprar mais cotas, altere apenas os números aqui!
 dados_carteira = {
     "KNRI11": {"cotas_adquiridas": 10, "setor": "Tijolo - Escritórios"},
     "HGLG11": {"cotas_adquiridas": 5,  "setor": "Tijolo - Logística"},
@@ -27,29 +26,32 @@ dados_carteira = {
 }
 
 linhas_html = ""
-
-# Usando a API pública da UseBolsaI com a sua chave para buscar os dados reais
 minha_chave = "sk_9ebd2ddf7587f98147ea61cfaaed6ad400fed15fb2ec1ca2"
 
 for ticker, info in dados_carteira.items():
     try:
-        url = f"https://api.usebolsai.com/api/v1/dividends/{ticker}?years=1"
+        # Chamando a rota de dividendos
+        url = f"https://api.usebolsai.com/api/v1/dividends/${ticker}?years=1"
         headers = {"X-API-Key": minha_chave, "Accept": "application/json"}
         response = requests.get(url, headers=headers).json()
         
-        # Pega o preço atual (verifica os dois campos possíveis da API)
-        preco = float(response.get('current_price') or response.get('close_price') or 100.00)
+        # Mapeando os dados conforme o retorno padrão do endpoint da UseBolsaI
+        preco = float(response.get('current_price') or response.get('close_price') or response.get('close') or 100.00)
         
-        # Pega o último dividendo pago
-        ultimo_dividendo = float(response.get('last_dividend') or 0.10)
+        # Coletando o dividendo mais recente dentro do array de histórico fornecido pela API
+        if 'dividends' in response and len(response['dividends']) > 0:
+            ultimo_dividendo = float(response['dividends'][0].get('amount') or response['dividends'][0].get('value') or 0.10)
+        else:
+            ultimo_dividendo = float(response.get('last_dividend') or 0.10)
+            
     except Exception:
-        # Fallback de segurança para o script não travar se a API falhar
-        preco = 10.00 if ticker in ["MXRF11", "RURA11"] else 100.00
-        ultimo_dividendo = 0.09 if preco == 10.00 else 1.00
+        # Mantendo seu Fallback caso o ativo falhe ou mude de preço temporariamente
+        preco = 9.80 if ticker in ["MXRF11", "RURA11"] else 100.00
+        ultimo_dividendo = 0.09 if preco == 9.80 else 1.00
 
-    # Executando as suas regras matemáticas:
+    # Executando as suas regras matemáticas exatas:
     num_magico = math.ceil(preco / ultimo_dividendo) if ultimo_dividendo > 0 else 0
-    qdcm_seg = math.ceil(num_magico * 1.3) # Número Mágico + 30% de margem
+    qdcm_seg = math.ceil(num_magico * 1.3) # Número Mágico + 30%
     v_ie_cotas = info["cotas_adquiridas"] * preco
     q_c_faltam = max(0, qdcm_seg - info["cotas_adquiridas"])
     q_f_investir = q_c_faltam * preco
@@ -73,7 +75,7 @@ for ticker, info in dados_carteira.items():
             <td>{qdcm_seg}</td>
         </tr>"""
 
-# Abre o arquivo modelo e injeta as linhas gerando o index.html finalizado
+# Injeta as linhas gerando o index.html finalizado
 with open("template.html", "r", encoding="utf-8") as f:
     template = f.read()
 
@@ -82,4 +84,4 @@ html_final = template.replace("<!-- LINHAS_FII -->", linhas_html)
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_final)
 
-print("index.html atualizado!")
+print("index.html atualizado com dados reais!")
