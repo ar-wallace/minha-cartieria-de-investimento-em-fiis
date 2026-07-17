@@ -1,0 +1,29 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de FIIs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f6f9; color: #333; }
+        h2 { color: #111; }
+        table { border-collapse: collapse; width: 100%; background: white; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background: #24292e; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .resumo { margin-top: 30px; padding: 20px; background: #e1e4e8; border-left: 6px solid #24292e; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h2>📊 Minha Carteira de FIIs</h2>
+    <p>Relatório gerado automaticamente através do Python.</p>
+    
+    {df.to_html(classes='tabela-fiis')}
+
+    <div class="resumo">
+        <h3>💰 Resumo Patrimonial Geral</h3>
+        <p><strong>Total Investido Atual:</strong> R$ {df['Valor_Investido'].sum():,.2f}</p>
+        <p><strong>Falta Aportar para o Número Mágico global:</strong> R$ {df['Valor_Falta_Investir'].sum():,.2f}</p>
+    </div>
+</body>
+</html>
