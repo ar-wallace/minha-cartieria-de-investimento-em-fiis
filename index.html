@@ -1,29 +1,319 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Relatório de FIIs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Wallace Sales">
+    <title>Carteira de investimentos em FIIs</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f6f9; color: #333; }
-        h2 { color: #111; }
-        table { border-collapse: collapse; width: 100%; background: white; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background: #24292e; color: white; }
-        tr:nth-child(even) { background: #f9f9f9; }
-        .resumo { margin-top: 30px; padding: 20px; background: #e1e4e8; border-left: 6px solid #24292e; border-radius: 4px; }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #dddddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; color: #333; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
     </style>
 </head>
 <body>
-    <h2>📊 Minha Carteira de FIIs</h2>
-    <p>Relatório gerado automaticamente através do Python.</p>
-    
-    {df.to_html(classes='tabela-fiis')}
 
-    <div class="resumo">
-        <h3>💰 Resumo Patrimonial Geral</h3>
-        <p><strong>Total Investido Atual:</strong> R$ {df['Valor_Investido'].sum():,.2f}</p>
-        <p><strong>Falta Aportar para o Número Mágico global:</strong> R$ {df['Valor_Falta_Investir'].sum():,.2f}</p>
-    </div>
+    <h2>Carteira de investimento em FIIs</h2>
+    <p>Acompanhe a tabela de investimento em FIIs abaixo...</p>
+
+    <table>
+        <tr>
+            <th>Ativos</th>
+            <th>Preços</th>
+            <th>Dividendos</th>
+            <th>Nº Mágico</th>
+            <th>V. I. e. Cotas</th>
+            <th>C. Adquiridas</th>
+            <th>Q. C. Faltam</th>
+            <th>Q. F. Investir</th>
+            <th>V. Investido</th>
+            <th>Setor</th>
+            <th>T. d. Recebido</th>
+            <th>Q. D. C. M. d. Seg.</th>
+        </tr>
+        
+        <tr>
+            <td>KNRI11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 1000.00</td>
+            <td>10</td>
+            <td>1290</td>
+            <td>R$ 129000.00</td>
+            <td>R$ 1000.00</td>
+            <td>Tijolo - Escritórios</td>
+            <td>R$ 1.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>HGLG11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 500.00</td>
+            <td>5</td>
+            <td>1295</td>
+            <td>R$ 129500.00</td>
+            <td>R$ 500.00</td>
+            <td>Tijolo - Logística</td>
+            <td>R$ 0.50</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>XPML11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 1200.00</td>
+            <td>12</td>
+            <td>1288</td>
+            <td>R$ 128800.00</td>
+            <td>R$ 1200.00</td>
+            <td>Tijolo - Shopping</td>
+            <td>R$ 1.20</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>MXRF11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 5000.00</td>
+            <td>50</td>
+            <td>1250</td>
+            <td>R$ 125000.00</td>
+            <td>R$ 5000.00</td>
+            <td>Papel - Recebíveis</td>
+            <td>R$ 5.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>RURA11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 26600.00</td>
+            <td>266</td>
+            <td>1034</td>
+            <td>R$ 103400.00</td>
+            <td>R$ 26600.00</td>
+            <td>Fiagro</td>
+            <td>R$ 26.60</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>GARE11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 2000.00</td>
+            <td>20</td>
+            <td>1280</td>
+            <td>R$ 128000.00</td>
+            <td>R$ 2000.00</td>
+            <td>Híbrido</td>
+            <td>R$ 2.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>VISC11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 200.00</td>
+            <td>2</td>
+            <td>1298</td>
+            <td>R$ 129800.00</td>
+            <td>R$ 200.00</td>
+            <td>Tijolo - Shopping</td>
+            <td>R$ 0.20</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>BTLG11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 800.00</td>
+            <td>8</td>
+            <td>1292</td>
+            <td>R$ 129200.00</td>
+            <td>R$ 800.00</td>
+            <td>Tijolo - Logística</td>
+            <td>R$ 0.80</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>GGRC11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 0.00</td>
+            <td>0</td>
+            <td>1300</td>
+            <td>R$ 130000.00</td>
+            <td>R$ 0.00</td>
+            <td>Tijolo - Logística</td>
+            <td>R$ 0.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>BRCO11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 500.00</td>
+            <td>5</td>
+            <td>1295</td>
+            <td>R$ 129500.00</td>
+            <td>R$ 500.00</td>
+            <td>Tijolo - Logística</td>
+            <td>R$ 0.50</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>HGBS11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 100.00</td>
+            <td>1</td>
+            <td>1299</td>
+            <td>R$ 129900.00</td>
+            <td>R$ 100.00</td>
+            <td>Tijolo - Shopping</td>
+            <td>R$ 0.10</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>IRIM11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 0.00</td>
+            <td>0</td>
+            <td>1300</td>
+            <td>R$ 130000.00</td>
+            <td>R$ 0.00</td>
+            <td>Papel - Recebíveis</td>
+            <td>R$ 0.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>XPLG11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 700.00</td>
+            <td>7</td>
+            <td>1293</td>
+            <td>R$ 129300.00</td>
+            <td>R$ 700.00</td>
+            <td>Tijolo - Logística</td>
+            <td>R$ 0.70</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>RBRR11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 1500.00</td>
+            <td>15</td>
+            <td>1285</td>
+            <td>R$ 128500.00</td>
+            <td>R$ 1500.00</td>
+            <td>Papel - Recebíveis</td>
+            <td>R$ 1.50</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>PMLL11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 0.00</td>
+            <td>0</td>
+            <td>1300</td>
+            <td>R$ 130000.00</td>
+            <td>R$ 0.00</td>
+            <td>Híbrido</td>
+            <td>R$ 0.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>KNCR11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 1000.00</td>
+            <td>10</td>
+            <td>1290</td>
+            <td>R$ 129000.00</td>
+            <td>R$ 1000.00</td>
+            <td>Papel - Recebíveis</td>
+            <td>R$ 1.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>KNCA11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 3000.00</td>
+            <td>30</td>
+            <td>1270</td>
+            <td>R$ 127000.00</td>
+            <td>R$ 3000.00</td>
+            <td>Fiagro</td>
+            <td>R$ 3.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>KNSC11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 0.00</td>
+            <td>0</td>
+            <td>1300</td>
+            <td>R$ 130000.00</td>
+            <td>R$ 0.00</td>
+            <td>Papel - Recebíveis</td>
+            <td>R$ 0.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>CPSH11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 0.00</td>
+            <td>0</td>
+            <td>1300</td>
+            <td>R$ 130000.00</td>
+            <td>R$ 0.00</td>
+            <td>Tijolo - Shopping</td>
+            <td>R$ 0.00</td>
+            <td>1300</td>
+        </tr>
+        <tr>
+            <td>DEVA11</td>
+            <td>R$ 100.00</td>
+            <td>R$ 0.10</td>
+            <td>1000</td>
+            <td>R$ 1000.00</td>
+            <td>10</td>
+            <td>1290</td>
+            <td>R$ 129000.00</td>
+            <td>R$ 1000.00</td>
+            <td>Papel - Recebíveis</td>
+            <td>R$ 1.00</td>
+            <td>1300</td>
+        </tr>
+    </table>
 </body>
 </html>
